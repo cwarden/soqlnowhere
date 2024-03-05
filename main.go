@@ -31,25 +31,24 @@ func (e *errorListener) SyntaxError(_ antlr.Recognizer, _ interface{}, line, col
 
 func (l *soqlNoWhereListener) EnterSoqlLiteral(ctx *parser.SoqlLiteralContext) {
 	query := ctx.Query()
-	if query.WhereClause() == nil {
-		p := ctx.GetParser()
-		tokens := p.GetTokenStream()
-		input := tokens.GetTokenSource().GetInputStream()
-		lexer := parser.NewApexLexer(input)
-		stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
-
-		v := formatter.NewFormatVisitor(stream)
-		out, ok := v.VisitRule(ctx).(string)
-		if !ok {
-			fmt.Errorf("Unexpected result formatting")
-		}
-		token := ctx.GetStart()
-
-		// Get the line number associated with the token
-		lineNumber := token.GetLine()
-
-		fmt.Println("No WHERE in", l.filename, "on line", lineNumber, ":", out)
+	if query.WhereClause() != nil {
+		return
 	}
+	p := ctx.GetParser()
+	tokens := p.GetTokenStream()
+	input := tokens.GetTokenSource().GetInputStream()
+	lexer := parser.NewApexLexer(input)
+	stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
+
+	v := formatter.NewFormatVisitor(stream)
+	out, ok := v.VisitRule(ctx).(string)
+	if !ok {
+		fmt.Errorf("Unexpected result formatting")
+	}
+	token := ctx.GetStart()
+	lineNumber := token.GetLine()
+
+	fmt.Println("No WHERE in", l.filename, "on line", lineNumber, ":", out)
 }
 
 var RootCmd = &cobra.Command{
